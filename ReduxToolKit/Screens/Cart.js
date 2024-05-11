@@ -1,60 +1,26 @@
 import React, {useEffect, useState} from 'react';
 import {
   FlatList,
-  View,
-  Text,
-  StyleSheet,
   Image,
-  TouchableOpacity,
   SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {AppHeader, EmptyMessage} from '../Components/All';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
+import {AddRemoveBtn, AppHeader, EmptyMessage} from '../Components/All';
+import {removeCart} from '../Redux/cartSlice';
 
 const Cart = props => {
   const cartData = useSelector(state => state.cart.data);
-  console.log('cart Data----', cartData);
+  const dispatch = useDispatch();
+
   const [products, setProducts] = useState([]);
 
-  // 1st way to do multiple api
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const promises = cartData.map(id =>
-          fetch(`https://fakestoreapi.com/products/${id}`).then(response =>
-            response.json(),
-          ),
-        );
-        const productsData = await Promise.all(promises);
-        setProducts(productsData);
-      } catch (error) {
-        console.log(error.message);
-      }
-    };
-
-    fetchProducts();
+    setProducts(cartData);
   }, [cartData]);
-
-  // 2nd way to do multiple api
-  // useEffect(() => {
-  //   for (let index = 0; index < cartData.length; index++) {
-  //     const id = cartData[index];
-  //     setTimeout(() => {
-  //       fetchCartProduct(id);
-  //     }, 200);
-  //   }
-  // }, []);
-
-  // const fetchCartProduct = async id => {
-  //   console.log('Iddddddd-----', id);
-  //   try {
-  //     const response = await fetch(`https://fakestoreapi.com/products/${id}`);
-  //     const json = await response.json();
-  //     setProducts(prev => [...prev, json]);
-  //   } catch (error) {
-  //     console.log(error.message);
-  //   }
-  // };
 
   const renderItem = ({item}) => (
     <TouchableOpacity
@@ -65,17 +31,21 @@ const Cart = props => {
       style={styles.item}>
       <View style={{width: '30%'}}>
         <Image
-          source={{uri: item.image}}
+          source={{uri: item?.image}}
           resizeMode="contain"
           style={styles.image}
         />
       </View>
       <View style={{width: '60%'}}>
         <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
-          {item.title}
+          {item?.title}
         </Text>
 
-        <Text style={styles.price}>₹{item.price}</Text>
+        <Text style={styles.price}>₹{item?.price}</Text>
+        <AddRemoveBtn
+          onPress={() => dispatch(removeCart(item?.id))}
+          title={'Remove from cart'}
+        />
       </View>
     </TouchableOpacity>
   );
@@ -91,7 +61,7 @@ const Cart = props => {
         data={products}
         renderItem={renderItem}
         ListEmptyComponent={() => <EmptyMessage message={'Cart is empty!'} />}
-        keyExtractor={item => item.id}
+        keyExtractor={(item, index) => index.toString()}
       />
     </SafeAreaView>
   );

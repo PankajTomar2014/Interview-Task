@@ -1,10 +1,10 @@
-import React, {useState} from 'react';
+import moment from 'moment';
+import React from 'react';
 import {
   Alert,
   Image,
-  StatusBar,
+  PermissionsAndroid,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -12,74 +12,16 @@ import {
   useColorScheme,
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-import {Colors, appImages, fontFamily} from '../Constant/Colors';
+import RNFetchBlob from 'rn-fetch-blob';
+import {Colors, appImages} from '../Constant/Colors';
 import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
-  capitalFirstLetter,
+  dummyImage,
+  getTimeDifference,
 } from '../Constant/Functions';
-import store from '../Redux/store';
 import {commonStyles} from '../Constant/commonStyle';
-import {useNavigation} from '@react-navigation/native';
-import {toggleDarkMode} from '../Redux/themeSlice';
-import {useDispatch} from 'react-redux';
-
-export const dummyProduct = {
-  type: 'jjj',
-  title: 'test product',
-  id: '13456',
-  price: '13.5',
-  description:
-    'Turbocharge your day with Rage Coffee in love with instantly 100% natural.',
-  image: 'https://assessment.upscreen.ai/images/screeningcompleted.png',
-  category: 'electronic',
-};
-
-export const dummyProduct2 = {
-  category: "men's clothing",
-  description:
-    'Your perfect pack for everyday use and walks in the forest. Stash your laptop (up to 15 inches) in the padded sleeve, your everyday',
-  id: 1,
-  image: 'https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg',
-  price: 109.95,
-  rating: {count: 120, rate: 3.9},
-  title: 'Fjallraven - Foldsack No. 1 Backpack, Fits 15 Laptops',
-};
-
-export const ProductCard = props => {
-  const navigation = useNavigation();
-  const {item} = props;
-  return (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('ProductDetails', {product: item})}
-      activeOpacity={0.7}
-      style={styles.item}>
-      <View
-        style={{
-          width: '30%',
-          borderWidth: 1,
-          borderColor: Colors.dimGray,
-          margin: 2,
-        }}>
-        <Image
-          source={{uri: item.image}}
-          resizeMode="contain"
-          style={styles.image}
-        />
-      </View>
-      <View style={{width: '65%', height: 110}}>
-        <Text style={styles.name} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text style={styles.price} numberOfLines={2}>
-          {item.description}
-        </Text>
-        <Text style={styles.price}>₹{item.price}</Text>
-        <Text style={styles.price}>Category : {item.category}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
+import RenderHtml from 'react-native-render-html';
 
 export const EmptyMessage = props => {
   const {message, styles} = props;
@@ -102,15 +44,6 @@ export const EmptyMessage = props => {
         {message}
       </Text>
     </View>
-  );
-};
-
-export const AddRemoveBtn = props => {
-  const {title, style} = props;
-  return (
-    <TouchableOpacity {...props} style={[styles.button, style]}>
-      <Text style={styles.buttonText}>{title}</Text>
-    </TouchableOpacity>
   );
 };
 
@@ -140,9 +73,200 @@ export const CustomeButton = props => {
     </TouchableOpacity>
   );
 };
+export const PostCard = props => {
+  const {item} = props;
+
+  const checkPermission = async (file, fileName) => {
+    console.log('file---', file);
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        downloadPdf(file, fileName);
+      } else {
+        Alert.alert('Error: ', 'Storage permission denied');
+      }
+    } catch (error) {
+      Alert.alert('Error: ', error.message);
+    }
+  };
+
+  const downloadPdf = (uri, filename) => {
+    try {
+      const randomImage =
+        dummyImage[Math.floor(Math.random() * dummyImage.length)];
+
+      RNFetchBlob.config({
+        fileCache: true,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          path: RNFetchBlob.fs.dirs.DownloadDir + '/' + filename,
+          description: 'File downloading...',
+        },
+      })
+        .fetch('GET', randomImage, {})
+        .then(res => {
+          console.log('File downloaded to:', res.path());
+          Alert.alert('File downloaded: ', res.path());
+        })
+        .catch(error => {
+          Alert.alert('Error: ', error.message);
+        });
+    } catch (error) {
+      Alert.alert('Error: ', error.message);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={() => null}
+      activeOpacity={1}
+      style={styles.item}>
+      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+        <View style={{width: '16%', margin: 2}}>
+          <Image
+            source={{
+              uri: 'https://www.vhv.rs/dpng/d/15-155087_dummy-image-of-user-hd-png-download.png',
+            }}
+            resizeMode="contain"
+            style={styles.image}
+          />
+        </View>
+        <View style={{width: '76%'}}>
+          <Text style={styles.name} numberOfLines={2}>
+            {item.title}
+            {' posted on announcement on '}
+            {moment(item.date).format('DD-MMM-YYYY , hh:mm A')}
+          </Text>
+          <Text style={styles.name} numberOfLines={2}>
+            {getTimeDifference(item.date)}
+          </Text>
+
+          <RenderHtml
+            source={{
+              html: `<p style="color: black">
+                    <span>
+                   ${item.announcement}
+                    </span>
+              </p>`,
+            }}
+          />
+
+          {/* <Text
+            style={[
+              styles.name,
+              {textTransform: 'capitalize', marginVertical: 10},
+            ]}>
+            {item.announcement}
+          </Text> */}
+          <DownloadBtn
+            fileName={item.file.name}
+            isDownload={true}
+            onPressDownload={() =>
+              checkPermission(item.file.path, item.file.name)
+            }
+          />
+          {item.images.map((item, key) => (
+            <ImageView
+              key={key}
+              isUploaded={item}
+              style={{width: SCREEN_WIDTH - 110}}
+              btnText={'Image'}
+            />
+          ))}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+export const MediaBtn = props => {
+  const {title, style} = props;
+  return (
+    <TouchableOpacity
+      {...props}
+      activeOpacity={0.9}
+      style={[
+        {
+          alignSelf: 'center',
+          flexDirection: 'row',
+          marginVertical: 10,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderWidth: 1,
+          height: 45,
+          width: '40%',
+        },
+        style,
+      ]}>
+      <Text style={{color: Colors.black, fontSize: 13}} numberOfLines={2}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+export const DownloadBtn = props => {
+  const {fileName, onPressCross, cross, onPressDownload, isDownload, style} =
+    props;
+  return (
+    <TouchableOpacity
+      {...props}
+      activeOpacity={0.9}
+      style={[
+        {
+          alignSelf: 'center',
+          flexDirection: 'row',
+          paddingHorizontal: 20,
+          marginVertical: 10,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderWidth: 1,
+          height: 45,
+          width: SCREEN_WIDTH - 110,
+        },
+        style,
+      ]}>
+      <Image
+        resizeMode={'contain'}
+        source={{
+          uri: 'https://img.icons8.com/?size=100&id=11204&format=png',
+        }}
+        style={{height: 25, width: 25}}
+      />
+      <Text style={{color: Colors.black, fontSize: 13}} numberOfLines={2}>
+        {fileName}
+      </Text>
+
+      {isDownload ? (
+        <IconBtn
+          style={{
+            height: 30,
+            width: 30,
+          }}
+          icon={{
+            uri: 'https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-download-arrow-vector-icon-white-transparent-background-png-image_1978018.jpg',
+          }}
+          onPress={onPressDownload}
+        />
+      ) : cross ? (
+        <IconBtn
+          style={{
+            height: 30,
+            width: 30,
+          }}
+          icon={appImages.cross}
+          onPress={onPressCross}
+        />
+      ) : null}
+    </TouchableOpacity>
+  );
+};
 
 export const ImageView = props => {
-  const {btnText, isUploaded, style} = props;
+  const {btnText, cross, onPressCross, isUploaded, style} = props;
 
   return (
     <TouchableOpacity
@@ -152,19 +276,25 @@ export const ImageView = props => {
         {
           borderWidth: 1,
           alignSelf: 'center',
-          borderRadius: 5,
-          marginVertical: 5,
-          paddingLeft: 16,
+          borderRadius: 10,
+          marginVertical: 10,
           justifyContent: 'center',
-          height: 50,
+          alignItems: 'center',
+          height: 100,
           width: '85%',
         },
         style,
       ]}>
       {isUploaded ? (
         <Image
+          {...props}
           source={{uri: isUploaded}}
-          style={{height: 40, width: '95%'}}
+          style={{
+            borderWidth: 1,
+            borderRadius: 10,
+            height: 98,
+            width: '99.5%',
+          }}
           resizeMode={'stretch'}
         />
       ) : (
@@ -178,6 +308,59 @@ export const ImageView = props => {
           {btnText}
         </Text>
       )}
+      {cross && (
+        <TouchableOpacity
+          onPress={onPressCross}
+          activeOpacity={0.8}
+          style={{
+            alignSelf: 'flex-end',
+            right: -15,
+            top: -20,
+            height: 40,
+            position: 'absolute',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            width: 40,
+          }}>
+          <Image
+            resizeMode={'contain'}
+            source={appImages.cross}
+            style={{height: 35, width: 35}}
+          />
+        </TouchableOpacity>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+export const DateTimeView = props => {
+  const {date} = props;
+
+  return (
+    <TouchableOpacity
+      {...props}
+      activeOpacity={0.7}
+      style={{
+        borderWidth: 1,
+        alignSelf: 'center',
+        borderRadius: 5,
+        marginVertical: 5,
+        justifyContent: 'center',
+        paddingLeft: 12,
+        height: 50,
+        width: '85%',
+      }}>
+      <Text
+        style={[
+          {
+            fontSize: 13,
+            color: Colors.black,
+          },
+        ]}>
+        {date
+          ? moment(date).format('DD-MMM-YYYY , hh:mm A')
+          : 'Select data and time'}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -240,38 +423,27 @@ export const DropDown = props => {
 };
 
 export const MsgInput = props => {
-  const {containerStyle} = props;
-  const darkMode = useColorScheme() == 'dark';
-  const {schemeColor} = store.getState().app;
+  const {} = props;
+
   return (
     <TextInput
       {...props}
-      style={[
-        {
-          borderWidth: 1,
-          borderColor:
-            darkMode && schemeColor === '#FFFFFF'
-              ? Colors.white
-              : schemeColor === '#FFFFFF'
-              ? Colors.black
-              : schemeColor,
-          alignSelf: 'center',
-          textAlignVertical: 'top',
-          // height:100,
-          minHeight: 100,
-          maxHeight: 200,
-          paddingVertical: 10,
-          paddingHorizontal: 15,
-          marginVertical: 5,
-          width: '85%',
-          borderRadius: 5,
-          // backgroundColor: schemeColor,
-          // fontFamily: Fonts.RobotoRegular,
-          fontSize: 13,
-          // color: Colors.darkGray,
-        },
-        containerStyle,
-      ]}
+      placeholderTextColor={Colors.black}
+      style={{
+        borderWidth: 1,
+        borderColor: Colors.black,
+        color: Colors.black,
+        alignSelf: 'center',
+        textAlignVertical: 'top',
+        minHeight: 80,
+        maxHeight: 100,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        marginVertical: 5,
+        width: '85%',
+        borderRadius: 5,
+        fontSize: 13,
+      }}
       multiline={true}
     />
   );
@@ -307,28 +479,6 @@ export const SeprateLine = props => {
   );
 };
 
-export const TitleView = props => {
-  const {title, darkMode} = props;
-  return (
-    <View
-      style={{
-        paddingHorizontal: 20,
-        width: SCREEN_WIDTH,
-        justifyContent: 'center',
-        height: 30,
-      }}>
-      <Text
-        style={{
-          fontSize: 14,
-          color: darkMode ? Colors.white : Colors.black,
-          fontFamily: fontFamily.RobotoRegular,
-        }}>
-        {title}
-      </Text>
-    </View>
-  );
-};
-
 export const Header = props => {
   const {title, onPress, isBack} = props;
 
@@ -361,7 +511,6 @@ export const Header = props => {
         style={{
           marginLeft: 13,
           fontSize: 18,
-          fontFamily: fontFamily.RobotoBold,
           color: Colors.white,
         }}>
         {title}
@@ -371,34 +520,8 @@ export const Header = props => {
 };
 
 export const AppHeader = props => {
-  const navigation = useNavigation();
-  const dispatch = useDispatch();
-  const cartCount = store.getState().cart.data.length;
-  const isDarkMode = store.getState().theme;
-  const [isDark, setIsDark] = useState(false);
-
-  const {
-    containerStyle,
-    onPressMenu,
-    isNeedback,
-    headerTitle,
-    isNeedAddNewProduct,
-    itemCount,
-    edit,
-    onPressEdit,
-  } = props;
-
+  const {containerStyle, onPressMenu, isNeedback, headerTitle} = props;
   const height = 50;
-
-  const onPressCart = () => {
-    navigation.navigate('Cart');
-  };
-
-  const handleDarkMode = value => {
-    setIsDark(!isDark);
-    dispatch(toggleDarkMode(!isDark));
-  };
-
   return (
     <View
       style={[
@@ -427,79 +550,20 @@ export const AppHeader = props => {
         style={{
           height: height,
           justifyContent: 'center',
+          alignItems: 'center',
           backgroundColor: Colors.black,
-          width: '60%',
+          width: '80%',
         }}>
         <Text
           numberOfLines={1}
           ellipsizeMode={'tail'}
           style={{
-            paddingRight: 15,
             fontSize: 18,
-            marginLeft: 10,
+            fontWeight: 'bold',
             color: Colors.white,
           }}>
           {headerTitle}
         </Text>
-
-        {itemCount != '' && itemCount != undefined && (
-          <Text
-            style={{
-              fontSize: 10,
-              marginLeft: 10,
-              fontFamily: Fonts.RobotoBold,
-              color: Colors.darkGray,
-            }}>
-            {itemCount}
-          </Text>
-        )}
-      </View>
-
-      <View
-        style={{
-          height: height,
-          flexDirection: 'row',
-          justifyContent: 'flex-end',
-          alignItems: 'flex-end',
-          width: '30%',
-        }}>
-        {isNeedAddNewProduct && (
-          <HeaderIconButton
-            onPress={() => navigation.navigate('AddNewProduct')}
-            count={0}
-            icon={{
-              uri: 'https://cdn.iconscout.com/icon/free/png-256/free-add-new-1439785-1214356.png',
-            }}
-          />
-        )}
-        <HeaderIconButton
-          onPress={() => onPressCart()}
-          count={cartCount}
-          icon={{
-            uri: 'https://static-00.iconduck.com/assets.00/shopping-cart-icon-2048x2047-gv68pvgw.png',
-          }}
-        />
-
-        {edit && (
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={{
-              padding: 5,
-              marginBottom: 10,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onPress={onPressEdit}>
-            <Text
-              style={{
-                fontFamily: Fonts.RobotoBold,
-                color: Colors.orange,
-                fontSize: 16,
-              }}>
-              {'Edit'}
-            </Text>
-          </TouchableOpacity>
-        )}
       </View>
     </View>
   );
@@ -577,7 +641,7 @@ export const ImageButton = props => {
 };
 
 export const IconBtn = props => {
-  const {icon, onPress, darkMode, iconStyle, style} = props;
+  const {icon, onPress, iconStyle, style} = props;
   return (
     <TouchableOpacity
       activeOpacity={0.9}
@@ -605,23 +669,29 @@ export const IconBtn = props => {
 
 const styles = StyleSheet.create({
   item: {
-    flexDirection: 'row',
+    width: '95%',
+    alignSelf: 'center',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
   name: {
-    fontSize: 18,
+    fontSize: 13,
+    color: Colors.black,
+    marginVertical: 2,
   },
   price: {
     fontSize: 16,
     fontWeight: 'bold',
   },
   image: {
-    width: 110,
-    height: 120,
+    borderWidth: 1,
+    borderRadius: 50,
+    borderColor: Colors.dimGray,
+    width: 50,
+    height: 50,
   },
   touchStyle: {
     alignSelf: 'center',

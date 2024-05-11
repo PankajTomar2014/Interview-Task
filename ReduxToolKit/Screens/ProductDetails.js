@@ -1,32 +1,37 @@
 import React from 'react';
 import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
   Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import {AddRemoveBtn, AppHeader} from '../Components/All';
 import {useDispatch, useSelector} from 'react-redux';
+import {AddRemoveBtn, AppHeader} from '../Components/All';
 import {addCart} from '../Redux/cartSlice';
 
 const ProductItem = props => {
   const dispatch = useDispatch();
   const {product} = props.route.params;
   const cartData = useSelector(state => state.cart.data);
-  // console.log('product----------', product);
 
-  const addtoCart = product => {
-    console.log('pro id----', cartData);
-    if (!cartData.includes(product.id)) {
-      dispatch(addCart(product.id));
-    } else {
-      Alert.alert('Warning!', 'Product already exist in cart');
+  const addtoCart = thisProduct => {
+    try {
+      const cartProducts = cartData.filter(
+        product => product.id == thisProduct.id,
+      );
+
+      if (cartProducts.length > 0) {
+        console.log('Product already exist in cart');
+        Alert.alert('Warning!', 'Product already exist in cart');
+      } else {
+        dispatch(addCart(thisProduct));
+      }
+    } catch (error) {
+      console.log('error----', error.message);
     }
-    // dispatch(addCart(product.id));
   };
 
   return (
@@ -49,6 +54,11 @@ const ProductItem = props => {
           <Text selectable style={styles.description}>
             Product _id : {product.id}
           </Text>
+          <AddRemoveBtn
+            title={'Add to Cart'}
+            style={styles.addToCartButton}
+            onPress={() => addtoCart(product)}
+          />
           <Text selectable style={styles.name}>
             {product.title}
           </Text>
@@ -59,14 +69,6 @@ const ProductItem = props => {
             {product.description}
           </Text>
           <Text style={styles.price}>₹{product.price}</Text>
-
-          <View style={styles.buttonsContainer}>
-            <AddRemoveBtn
-              title={'Add to Cart'}
-              style={styles.addToCartButton}
-              onPress={() => addtoCart(product)}
-            />
-          </View>
         </View>
         <View style={{height: 100}} />
       </ScrollView>
@@ -116,11 +118,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
 
-  buttonsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   button: {
     backgroundColor: '#007bff',
     paddingVertical: 8,

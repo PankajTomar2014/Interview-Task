@@ -1,31 +1,30 @@
-import {useState} from 'react';
 import axios from 'axios';
+import {useEffect, useState} from 'react';
 import RNFetchBlob from 'rn-fetch-blob';
 import {CustomButton, Header, Input} from '../Components/All';
 
 import {
-  TouchableOpacity,
-  View,
-  Button,
   Image,
-  TextInput,
   Platform,
-  ScrollView,
   SafeAreaView,
+  ScrollView,
+  View,
+  useColorScheme,
 } from 'react-native';
+import Colors from '../Components/Colors';
+import {dynamicSize} from '../Components/DynamicSize';
 import {
   validateEmail,
   validateFirstName,
   validateLastName,
-  validateName,
   validatePhoneNo,
-  validateSpace,
 } from '../Components/Validation';
-import {dynamicSize} from '../Components/DynamicSize';
 
 export default DetailScreen = props => {
+  const isDarkMode = useColorScheme() == 'dark';
+
   const {item} = props.route.params;
-  console.log('props------', item);
+
   const [firstName, setFirstName] = useState('');
   const [firstNameError, setFirstNameError] = useState('');
   const [lastName, setLastName] = useState('');
@@ -34,6 +33,8 @@ export default DetailScreen = props => {
   const [emailError, setEmailError] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
+
+  useEffect(() => {}, [firstName, lastName, email, phone]);
 
   const submitForm = async () => {
     if (firstName == '') {
@@ -127,6 +128,7 @@ export default DetailScreen = props => {
   const validateLastNameFun = lName => {
     setLastName(lName);
     setLastNameError('');
+    console.log('name---------', lastName);
   };
 
   const validateEmailFun = email => {
@@ -139,15 +141,18 @@ export default DetailScreen = props => {
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView
+      style={{
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
+      }}>
       <Header isBack title={'Detail Screen'} />
       <ScrollView showsVerticalScrollIndicator={false}>
         <Image
           source={{uri: item.xt_image}}
-          resizeMode="contain"
-          // style={{width: '100%', aspectRatio: 1}}
           style={{
-            width: dynamicSize(350),
+            marginVertical: 20,
+            alignSelf: 'center',
+            width: '97%',
             height: dynamicSize(300),
           }}
         />
@@ -181,7 +186,12 @@ export default DetailScreen = props => {
         />
 
         <CustomButton
-          containerStyle={{alignSelf: 'flex-end', marginRight: 10}}
+          containerStyle={{
+            alignSelf: 'flex-end',
+            marginVertical: 30,
+            width: '40%',
+            marginRight: 10,
+          }}
           title="Submit"
           onPressBtn={submitForm}
         />

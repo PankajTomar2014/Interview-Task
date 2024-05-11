@@ -39,7 +39,6 @@ export const commonStyles = StyleSheet.create({
   },
   toastTextStyle: {
     fontSize: 15,
-    fontFamily: fontFamily.RobotoRegular,
     color: Colors.white,
   },
 });

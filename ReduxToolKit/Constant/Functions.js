@@ -20,3 +20,11 @@ export const capitalFirstLetter = letter => {
     console.log('capitalFirstLetter--error------', error.message);
   }
 };
+
+export const genrateRandomNumber = () => {
+  try {
+    return Math.floor(Math.random() * 9000000000) + 1;
+  } catch (error) {
+    console.log('error------', error.message);
+  }
+};

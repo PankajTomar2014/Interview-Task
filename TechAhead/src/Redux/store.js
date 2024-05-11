@@ -1,8 +1,5 @@
 import {configureStore, getDefaultMiddleware} from '@reduxjs/toolkit';
-import cart from './cartSlice';
-import theme from './themeSlice';
-import products from './productSlice';
-import apiProducts from './apiCall';
+import post from './postSlice';
 
 // Middleware function to log actions
 const loggerMiddleware = store => next => action => {
@@ -16,10 +13,7 @@ const loggerMiddleware = store => next => action => {
 // Configure the Redux store with customized middleware
 const store = configureStore({
   reducer: {
-    cart,
-    theme,
-    products,
-    apiProducts,
+    post,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware().concat(loggerMiddleware),

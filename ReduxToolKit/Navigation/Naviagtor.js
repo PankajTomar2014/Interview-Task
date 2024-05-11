@@ -5,6 +5,8 @@ import React from 'react';
 import ProductList from '../Screens/ProductList';
 import ProductDetails from '../Screens/ProductDetails';
 import Cart from '../Screens/Cart';
+import AddNewProduct from '../Screens/AddNewProduct';
+import ProductByApi from '../Screens/ProductByApi';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +23,8 @@ export const RootStack = () => {
         />
         <Stack.Screen name="ProductDetails" component={ProductDetails} />
         <Stack.Screen name="Cart" component={Cart} />
+        <Stack.Screen name="AddNewProduct" component={AddNewProduct} />
+        <Stack.Screen name="ProductByApi" component={ProductByApi} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,4 +1,4 @@
-import {combineReducers, createSlice} from '@reduxjs/toolkit';
+import {createSlice} from '@reduxjs/toolkit';
 
 const cart = createSlice({
   name: 'cart',
@@ -7,7 +7,6 @@ const cart = createSlice({
   },
   reducers: {
     addCart: (state, action) => {
-      console.log('state---', action);
       state.data.push(action.payload);
     },
     removeCart: (state, action) => {
@@ -21,8 +20,4 @@ const cart = createSlice({
 
 export const {addCart, removeCart, emptyCart} = cart.actions;
 
-const rootReducer = combineReducers({
-  cart: cart.reducer,
-});
-
-export default rootReducer;
+export default cart.reducer;
